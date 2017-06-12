@@ -109,7 +109,7 @@ static int rollingfile_open(log4c_appender_t* this)
 			       &rfup->rfu_current_fp)){
                                 rc = 1; /* rollover error */
    } else {
-    rfup->rfu_current_file_size = 0;
+    rfup->rfu_current_file_size = ftell(rfup->rfu_current_fp);
    }
  } else {
    /* No policy defined, open it ourselves */

@@ -270,6 +270,7 @@ static int rollingpolicy_load(log4c_rc_t* this, sd_domnode_t* anode)
       if (!strcasecmp(type->value, "sizewin")){
         sd_domnode_t*   maxsize   = sd_domnode_attrs_get(anode, "maxsize");
         sd_domnode_t*   maxnum  = sd_domnode_attrs_get(anode, "maxnum");
+		sd_domnode_t*   append  = sd_domnode_attrs_get(anode, "append");
         rollingpolicy_sizewin_udata_t *sizewin_udatap = NULL;
         
         sd_debug("type='sizewin', maxsize='%s', maxnum='%s', "
@@ -298,10 +299,12 @@ static int rollingpolicy_load(log4c_rc_t* this, sd_domnode_t* anode)
 	  }
 
         sizewin_udata_set_max_num_files(sizewin_udatap, atoi(maxnum->value));
+		sizewin_udata_set_file_append(sizewin_udatap, append ? atoi(append->value) : 0);
         }else{
           sd_debug("policy already has a sizewin udata--just updating params");
         sizewin_udata_set_file_maxsize(sizewin_udatap, parse_byte_size(maxsize->value));
         sizewin_udata_set_max_num_files(sizewin_udatap, atoi(maxnum->value));
+		sizewin_udata_set_file_append(sizewin_udatap, append ? atoi(append->value) : 0);
          /* allow the policy to initialize itself */
         log4c_rollingpolicy_init(rpolicyp, 
             log4c_rollingpolicy_get_rfudata(rpolicyp));

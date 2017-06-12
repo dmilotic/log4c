@@ -36,6 +36,7 @@
 struct __sizewin_conf {  
   long swc_file_maxsize;
   long swc_file_max_num_files;
+  int swc_file_append;
 };
 
 struct __sizewin_udata {
@@ -63,6 +64,7 @@ static int sizewin_get_last_index(rollingpolicy_sizewin_udata_t * swup);
 static char* sizewin_get_filename_by_index(rollingpolicy_sizewin_udata_t * swup,
 					   long i);
 static int sizewin_open_zero_file(char *filename, FILE **fpp );
+static int sizewin_append_zero_file(char *filename, FILE **fpp );
 
 /*******************************************************************************
               Policy interface: init, is_triggering_event, rollover
@@ -118,6 +120,13 @@ static int sizewin_rollover(log4c_rollingpolicy_t *this, FILE ** current_fpp ){
   } else {
   
    k = swup->sw_last_index;
+   
+	if (k >= 0 && swup->sw_conf.swc_file_append && !(swup->sw_flags & SW_LAST_FOPEN_FAILED) && *current_fpp == NULL) {
+		if (sizewin_append_zero_file(swup->sw_filenames[0], current_fpp) == 0) {
+			swup->sw_flags &= !SW_LAST_FOPEN_FAILED;
+			return 0;
+		}
+	}
 
    if ( k < 0 ) {
      sd_debug("creating first file");
@@ -308,6 +317,14 @@ LOG4C_API int sizewin_udata_set_max_num_files(rollingpolicy_sizewin_udata_t *swu
   return(0);
 }
 
+LOG4C_API int sizewin_udata_set_file_append(rollingpolicy_sizewin_udata_t *swup, 
+					  int file_append){
+
+  swup->sw_conf.swc_file_append = file_append;
+
+  return(0);
+}
+
 /****************************************************************************/
 
 LOG4C_API int sizewin_udata_set_rfudata(rollingpolicy_sizewin_udata_t *swup,
@@ -405,6 +422,21 @@ static int sizewin_open_zero_file(char *filename, FILE **fpp ){
   sd_debug("]");  
   return(rc);
 
+}
+
+static int sizewin_append_zero_file(char *filename, FILE **fpp ){
+
+  if ( (*fpp = fopen(filename, "a+")) == NULL){
+   sd_error("failed to open zero file '%s' for append error='%s'",
+     filename, strerror(errno));    
+    return 1;
+  }
+    
+  /* unbuffered mode at the filesystem level
+   xxx make this configurable from the outside ?
+  */
+  setbuf(*fpp, NULL);    
+  return(0);
 }
 
 /****************************************************************************/

@@ -70,6 +70,8 @@ LOG4C_API int sizewin_udata_set_max_num_files(
                               rollingpolicy_sizewin_udata_t * swup,
 	                      long max_num);
 
+LOG4C_API int sizewin_udata_set_file_append(rollingpolicy_sizewin_udata_t *swup, 
+					  int file_append);
 /**
  * Set the rolling file appender in this rolling policy configuration.
  * @param swup the size-win configuration object.
